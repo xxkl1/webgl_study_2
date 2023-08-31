@@ -1,24 +1,22 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import { clear } from './utils'
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+const getGl = function () {
+    const canvas = document.querySelector('#webgl') as HTMLCanvasElement
+    const gl = canvas.getContext('webgl')
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+    return {
+        canvas: canvas,
+        gl: gl,
+    }
+}
+
+const __main = function () {
+    const {
+        canvas,
+        gl,
+    } = getGl()
+
+    clear(gl!)
+}
+
+__main()
