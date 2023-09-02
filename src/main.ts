@@ -1,4 +1,4 @@
-import { clear } from './utils'
+import { clear } from './utils/gl'
 
 const getGl = function () {
     const canvas = document.querySelector('#webgl') as HTMLCanvasElement
