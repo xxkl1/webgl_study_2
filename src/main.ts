@@ -31,10 +31,29 @@ import { clear } from './utils/gl'
  * 对于opengl，需要进行交换颜色缓冲区
  * 而对于webgl，是不需要进行交互颜色缓冲区的
  */
+
+/**
+ * attribute的定义：一种glsl es 变量，被用来从外部（js）向顶点着色器内传输数据，只有顶点着色器可以使用它
+ *
+ */
+
+/**
+ * 存储限定符
+ * attribute vec4 a_Position
+ * attribute: attribute就是一个存储限定符
+ * vec4: 类型
+ * a_Position: 变量名
+ */
+
+/**
+ * 注意：attribute变量必须为全局变量
+ */
 var VSHADER_SOURCE =
+  'attribute vec4 a_Position;\n' + // attribute variable
+  'attribute float a_PointSize;\n' +
   'void main() {\n' +
-  '  gl_Position = vec4(1.0, 0.0, 0.0, 1.0);\n' + // Set the vertex coordinates of the point
-  '  gl_PointSize = 10.0;\n' +                    // Set the point size
+  '  gl_Position = a_Position;\n' +
+  '  gl_PointSize = a_PointSize;\n' +
   '}\n';
 
 // Fragment shader program
@@ -44,7 +63,7 @@ var VSHADER_SOURCE =
  */
 var FSHADER_SOURCE =
   'void main() {\n' +
-  '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' + // Set the point color
+  '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
 
 const getGl = function () {
@@ -69,6 +88,46 @@ const __main = function () {
             console.log('Failed to intialize shaders.')
             return;
         }
+
+        // Get the storage location of a_Position
+        /**
+         * 获取attribute变量的存储位置
+         * 返回值：
+         * 大于或者等于0，attribute变量的地址
+         * -1，指定的attribute变量不存在，或者将其命名具有gl_或webgl_前缀
+         */
+        var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+        if (a_Position < 0) {
+            console.log('Failed to get the storage location of a_Position');
+            return;
+        }
+
+        // 将顶点位置，传给a_Position attribute 变量
+        /**
+         * 这里传输的是一个vec3变量，a_Position声明的是vec4变量，因此，webgl会自动将vec3转为vec4
+         * 必须要使用vec4的原因是，gl_Position是vec4类型的变量
+         *
+         * 3f，的意思应该就是三维矢量，还有1f，2f，4f等
+         */
+        /**
+         * 同等替换的方法
+         * var position = new Float32Array([0.0, 0.0, 0.0])
+         * gl.vertexAttrib3fv(a_Position, position)
+         * 函数结尾的3f，变成3fv，代表矢量版本的方法，作用是一样的
+         */
+
+        /**
+         * webgl函数命名规范，遵循opengl函数命名规范
+         * <基础函数><参数个数><参数类型>
+         * 例如这里的
+         * vertexAttrib: 基础函数
+         * 3: 参数个数
+         * f: 浮点类型
+         */
+        gl.vertexAttrib3f(a_Position, 0.0, 0.0, 0.0);
+
+        var a_PositSize = gl.getAttribLocation(gl.program, 'a_PointSize');
+        gl.vertexAttrib1f(a_PositSize, 10.0);
 
         clear(gl)
 
