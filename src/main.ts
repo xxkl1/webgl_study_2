@@ -114,6 +114,10 @@ const handleClick = function (event: MouseEvent, gl: WebGLRenderingContext, canv
     g_points.push(y);
 
     // Clear <canvas>
+    /**
+     * 这一句是必要的，保证背景是黑色，因为每次渲染，颜色缓冲区会重置为透明色
+     * 如果没有这一句，背景在第一次点击后就会变成透明色
+     */
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     const len = g_points.length;
