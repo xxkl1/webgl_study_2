@@ -60,9 +60,18 @@ var VSHADER_SOURCE =
 /**
  * vec4 -> rgba
  */
+/**
+ * uniform 可以用于js 传递 数据到 顶点着色器 或者 片元着色器
+ * 而attribute只能用于顶点着色器
+ * 对于attribute，只能是float类型，而对于uniform，可以是任意类型
+ * precision mediump float 用于精度范围的限定，是必要的不然会报错，先不管，后面研究
+ * precision 是精度限定词
+ */
 var FSHADER_SOURCE =
+  'precision mediump float;\n' +
+  'uniform vec4 u_FragColor;\n' +  // uniform変数
   'void main() {\n' +
-  '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
+  '  gl_FragColor = u_FragColor;\n' +
   '}\n';
 
 const getGl = function () {
@@ -80,8 +89,9 @@ const getGl = function () {
  * gl.drawArrays实际是在颜色缓冲区上进行绘制，每次颜色缓冲区渲染完后，都会清空缓冲区
  * 所以，需要一个g_points，将用户之前点击的坐标信息，都保存起来，保证每次点击渲染，都能将之前的点都渲染出来
  */
-const g_points : number[] = []; // The array for the position of a mouse press
-const handleClick = function (event: MouseEvent, gl: WebGLRenderingContext, canvas: HTMLCanvasElement, a_Position: number) {
+const g_points : number[][] = []; // The array for the position of a mouse press
+const g_colors : number[][] = [];
+const handleClick = function (event: MouseEvent, gl: WebGLRenderingContext, canvas: HTMLCanvasElement, a_Position: number, u_FragColor: WebGLUniformLocation) {
     /**
      * 获取鼠标点击，相对与整体视窗的位置
      */
@@ -109,9 +119,20 @@ const handleClick = function (event: MouseEvent, gl: WebGLRenderingContext, canv
      * y的计算也是一样，只是把单位长度换成了canvas.height / 2
      */
     y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2)
+
     // Store the coordinates to g_points array
-    g_points.push(x);
-    g_points.push(y);
+    g_points.push([x, y]);
+    // Store the coordinates to g_points array
+    if (x >= 0.0 && y >= 0.0) {      // First quadrant
+        // 右上角显示红色
+        g_colors.push([1.0, 0.0, 0.0, 1.0]);  // Red
+    } else if (x < 0.0 && y < 0.0) { // Third quadrant
+        // 左下角显示绿色
+        g_colors.push([0.0, 1.0, 0.0, 1.0]);  // Green
+    } else {                         // Others
+        // 左上角和右下角显示白色
+        g_colors.push([1.0, 1.0, 1.0, 1.0]);  // White
+    }
 
     // Clear <canvas>
     /**
@@ -120,11 +141,15 @@ const handleClick = function (event: MouseEvent, gl: WebGLRenderingContext, canv
      */
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    const len = g_points.length;
-    for(let i = 0; i < len; i += 2) {
+    var len = g_points.length;
+    for(var i = 0; i < len; i++) {
+      var xy = g_points[i];
+      var rgba = g_colors[i];
+  
       // Pass the position of a point to a_Position variable
-      gl.vertexAttrib3f(a_Position, g_points[i], g_points[i+1], 0.0);
-
+      gl.vertexAttrib3f(a_Position, xy[0], xy[1], 0.0);
+      // Pass the color of a point to u_FragColor variable
+      gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
       // Draw
       gl.drawArrays(gl.POINTS, 0, 1);
     }
@@ -156,6 +181,15 @@ const __main = function () {
             return;
         }
 
+        /**
+         * getUniformLocation 获取的变量如果不存在，或者使用了保留词前缀，返回null
+         */
+        var u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+        if (!u_FragColor) {
+          console.log('Failed to get the storage location of u_FragColor');
+          return;
+        }
+
         // 将顶点位置，传给a_Position attribute 变量
         /**
          * 这里传输的是一个vec3变量，a_Position声明的是vec4变量，因此，webgl会自动将vec3转为vec4
@@ -184,7 +218,7 @@ const __main = function () {
         gl.vertexAttrib1f(a_PositSize, 10.0);
 
         canvas.addEventListener('mousedown', (event) => {
-            handleClick(event, gl, canvas, a_Position)
+            handleClick(event, gl, canvas, a_Position, u_FragColor!)
         })
 
         clear(gl)
