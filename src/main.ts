@@ -154,6 +154,7 @@ const initVertexBuffers = function (gl: WebGLRenderingContext) {
 
     // Enable the assignment to a_Position variable
     // 对于缓冲区 对象和sharder attrib中，还有一个开关，需要打开，才能真正传送数据
+    // 同样，可以使用gl.disableVertexAttribArray(a_Position)关闭开关
     gl.enableVertexAttribArray(a_Position);
 
     return n;
@@ -194,7 +195,7 @@ const __main = function () {
          * 等等
          *
          * 参数-first: 整型
-         * 从哪个像素点开始绘制
+         * 表示从缓冲区 坐标开始画，这里是从第一个坐标开始画
          *
          * 参数-count: 整型
          * 绘制的像素点数量
