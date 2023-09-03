@@ -1,6 +1,6 @@
 const clear = function (gl: WebGLRenderingContext) {
     // 设置清除颜色为黑色，不透明
-    gl.clearColor(0.0, 0.0, 1.0, 1.0)
+    gl.clearColor(0.0, 0.0, 0.0, 1.0)
 
     /**
      * 调用之前指定的颜色，清除绘图区域
