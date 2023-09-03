@@ -50,10 +50,9 @@ import { clear } from './utils/gl'
  */
 var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n' + // attribute variable
-  'attribute float a_PointSize;\n' +
   'void main() {\n' +
   '  gl_Position = a_Position;\n' +
-  '  gl_PointSize = a_PointSize;\n' +
+  '  gl_PointSize = 10.0;\n' +
   '}\n';
 
 // Fragment shader program
@@ -76,13 +75,59 @@ const getGl = function () {
     }
 }
 
+const g_points : number[] = []; // The array for the position of a mouse press
+const handleClick = function (event: MouseEvent, gl: WebGLRenderingContext, canvas: HTMLCanvasElement, a_Position: number) {
+    /**
+     * 获取鼠标点击，相对与整体视窗的位置
+     */
+    let x = event.clientX; // x coordinate of a mouse pointer
+    let y = event.clientY; // y coordinate of a mouse pointer
+    /**
+     * 获取，Canvas盒子相对与整体视窗的位置
+     */
+    const rect = event.target?.getBoundingClientRect();
+
+    /**
+     * 对于webgl，长度1，就相当于Canvas 长或者宽的一半
+     * 所以，下面的canvas.width / 2 和 canvas.height / 2代表单位长度
+     */
+    /**
+     * x - rect.left得到的鼠标在相对于Canvas的坐标
+     * ((x - rect.left) - canvas.width / 2) 的原因：
+     * 由于这个坐标体系的原点是在左上角，而webgl的坐标体系原点是在Canvas中心
+     * 两个不同坐标系的原点，相差canvas.width / 2，对于Canvas坐标系，x = 0的时候，在webgl坐标系是x = -1
+     * 所以需要 减去 canvas.width / 2
+     * 再除去webgl坐标单位长度canvas.width / 2，就得到最终的值
+     */
+    x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2)
+    /**
+     * y的计算也是一样，只是把单位长度换成了canvas.height / 2
+     */
+    y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2)
+    // Store the coordinates to g_points array
+    g_points.push(x);
+    g_points.push(y);
+
+    // Clear <canvas>
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    const len = g_points.length;
+    for(let i = 0; i < len; i += 2) {
+      // Pass the position of a point to a_Position variable
+      gl.vertexAttrib3f(a_Position, g_points[i], g_points[i+1], 0.0);
+
+      // Draw
+      gl.drawArrays(gl.POINTS, 0, 1);
+    }
+}
+
 const __main = function () {
     const {
         canvas,
         gl,
     } = getGl()
 
-    if (gl) {
+    if (canvas && gl) {
         // Initialize shaders
         if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
             console.log('Failed to intialize shaders.')
@@ -129,6 +174,10 @@ const __main = function () {
         var a_PositSize = gl.getAttribLocation(gl.program, 'a_PointSize');
         gl.vertexAttrib1f(a_PositSize, 10.0);
 
+        canvas.addEventListener('mousedown', (event) => {
+            handleClick(event, gl, canvas, a_Position)
+        })
+
         clear(gl)
 
         // Draw a point
@@ -152,7 +201,7 @@ const __main = function () {
         /**
          * gl.drawArrays(gl.POINTS, 0, 1)表示，从第一个顶点开始绘制，绘制一个顶点
          */
-        gl.drawArrays(gl.POINTS, 0, 1)
+        // gl.drawArrays(gl.POINTS, 0, 1)
     }
 
 
