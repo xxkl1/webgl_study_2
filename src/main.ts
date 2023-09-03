@@ -82,13 +82,32 @@ const getGl = function () {
     }
 }
 
-const initVertexBuffers = function (gl: WebGLRenderingContext) {
+/**
+ * 在上次的绘制多个点的例程中，使用的方案是，使用for循环调用多次gl.drawArrays
+ * 通过设置sharder的坐标和颜色，然后设置颜色缓冲区进行绘制
+ * 但是，这种方式，会导致js和opengl se 多次 briage交互，性能不好，猜的
+ * 可以优化为使用缓冲区对象的方式，缓冲区对象，是webgl一块内存区域
+ * 向缓冲区对象中，写入所有需要设置的顶点的数据，然后，调用一次gl.drawArrays
+ */
+
+/**
+ * 该函数
+ */
+const initVertexBuffers = function (gl: WebGLRenderingContext) {    
+    /**
+     * Float32Array 是类型化数组， 用于指定类型，节省内存
+     * 还有Int8Array，UInt8Array, Float64Array等
+     */
     var vertices = new Float32Array([
       0.0, 0.5,   -0.5, -0.5,   0.5, -0.5
     ]);
     var n = 3; // The number of vertices
 
     // Create a buffer object
+    /**
+     * 创键缓冲区对象，相当于在webgl创键一块缓冲区对象内存
+     * 对应的，删除缓冲区对象是gl.deleteBuffer()
+     */
     var vertexBuffer = gl.createBuffer();
     if (!vertexBuffer) {
       console.log('Failed to create the buffer object');
@@ -96,8 +115,25 @@ const initVertexBuffers = function (gl: WebGLRenderingContext) {
     }
 
     // Bind the buffer object to target
+    /**
+     * gl.bindBuffer用于绑定缓冲区对象，到bindBuffer第一个参数代表的target上
+     * 绑定target，代表的是缓冲区将用于对应的哪种用途，就有点像该缓冲区接上了哪条管道
+     * 参数可选
+     * 1. gl.ARRAY_BUFFER 表示缓冲区 对象里面 将存放 顶点数据
+     * 2. gl.ELEMENT_ARRAY_BUFFER 表示缓冲区 对象里面 将存放 顶点的索引值
+     */
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     // Write date into the buffer object
+    /**
+     * gl.bufferData 是向缓冲区写入数据
+     * 第一个参数，gl.ARRAY_BUFFER，由于我们不能直接向缓冲区对象写数据
+     * 而是只能向缓冲区对象绑定的目标写数据，上面缓冲区对象绑定到了gl.ARRAY_BUFFER 目标上
+     * 所以，向gl.ARRAY_BUFFER，就相当于对上面的缓冲区对象写数据
+     *
+     * 第二个参数，vertices，写入的数据
+     *
+     * 第三个参数，帮助webgl优化的参数，写错也没关系，但会降低效率，后面再看
+     */
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
     var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
@@ -106,9 +142,18 @@ const initVertexBuffers = function (gl: WebGLRenderingContext) {
       return -1;
     }
     // Assign the buffer object to a_Position variable
+    /**
+     * 将缓冲区对象的引用分配给attribute变量
+     * 参数1 - attribute变量 位置
+     * 参数2 - 指定缓冲区中每个顶点的分量数，必须是1 - 4，这里设置为2，attribute变量类型是vec4，相当于是vec2分配给vec4，会进行自动转换，这里会补上(x, y , 0.0, 1.0)
+     * 参数3 - 类型
+     * 参数4 - 相邻两个顶点的字节数
+     * 参数5 - 起始位置
+     */
     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
 
     // Enable the assignment to a_Position variable
+    // 对于缓冲区 对象和sharder attrib中，还有一个开关，需要打开，才能真正传送数据
     gl.enableVertexAttribArray(a_Position);
 
     return n;
