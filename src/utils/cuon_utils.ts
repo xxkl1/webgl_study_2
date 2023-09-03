@@ -91,7 +91,7 @@ const initShaders = function (gl: WebGLRenderingContext, vshader: string, fshade
     }
 
     gl.useProgram(program);
-    // 这句不知道用来干嘛，但是先注释
+    // 这句不知道用来干嘛，放开会有类型错误，先注释
     // gl.program = program;
 
     return true
