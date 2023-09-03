@@ -75,6 +75,11 @@ const getGl = function () {
     }
 }
 
+/**
+ * 注意：
+ * gl.drawArrays实际是在颜色缓冲区上进行绘制，每次颜色缓冲区渲染完后，都会清空缓冲区
+ * 所以，需要一个g_points，将用户之前点击的坐标信息，都保存起来，保证每次点击渲染，都能将之前的点都渲染出来
+ */
 const g_points : number[] = []; // The array for the position of a mouse press
 const handleClick = function (event: MouseEvent, gl: WebGLRenderingContext, canvas: HTMLCanvasElement, a_Position: number) {
     /**
