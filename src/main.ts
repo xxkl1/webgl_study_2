@@ -25,6 +25,12 @@ import { clear } from './utils/gl'
  * 可以把gl_Position，改成vec4(1.0, 0.0, 0.0, 1.0)，可以观察到webgl坐标的单位值和普通Canvas不太一样
  * (1.0, 0.0, 0.0, 1.0)，x轴会移动到右边缘，即整个webgl视图大小是1
  */
+
+/**
+ * 注意：
+ * 对于opengl，需要进行交换颜色缓冲区
+ * 而对于webgl，是不需要进行交互颜色缓冲区的
+ */
 var VSHADER_SOURCE =
   'void main() {\n' +
   '  gl_Position = vec4(1.0, 0.0, 0.0, 1.0);\n' + // Set the vertex coordinates of the point
