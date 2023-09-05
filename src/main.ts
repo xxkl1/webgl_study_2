@@ -98,9 +98,9 @@ const initVertexBuffers = function (gl: WebGLRenderingContext) {
      * 还有Int8Array，UInt8Array, Float64Array等
      */
     var vertices = new Float32Array([
-      0.0, 0.5,   -0.5, -0.5,   0.5, -0.5
+        -0.5, 0.5,   -0.5, -0.5,   0.5, 0.5,　0.5, -0.5
     ]);
-    var n = 3; // The number of vertices
+    var n = 4; // The number of vertices
 
     // Create a buffer object
     /**
@@ -208,7 +208,11 @@ const __main = function () {
          * 绘制三角形，绘制三角形会根据第三个参数给的数量
          * 按3个进行分配，如果n不是3的倍数，那么剩下一个或者两个点将被忽略
          */
-        gl.drawArrays(gl.TRIANGLES, 0, n);
+        /**
+         * 绘制一个正方形，如果使用gl.TRIANGLES，需要6个顶点
+         * 使用gl.TRIANGLE_STRIP的话，表示三角带，只需要4个顶点
+         */
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
     }
 
 
