@@ -50,8 +50,9 @@ import { clear } from './utils/gl'
  */
 var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n' +
+  'uniform vec4 u_Translation;\n' +
   'void main() {\n' +
-  '  gl_Position = a_Position;\n' +
+  '  gl_Position = a_Position + u_Translation;\n' +
   '}\n';
 
 // Fragment shader program
@@ -70,6 +71,8 @@ var FSHADER_SOURCE =
   'void main() {\n' +
   '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
+
+var Tx = 0.5, Ty = 0.5, Tz = 0.0;
 
 const getGl = function () {
     const canvas = document.querySelector('#webgl') as HTMLCanvasElement
@@ -98,9 +101,9 @@ const initVertexBuffers = function (gl: WebGLRenderingContext) {
      * 还有Int8Array，UInt8Array, Float64Array等
      */
     var vertices = new Float32Array([
-        -0.5, 0.5,   -0.5, -0.5,   0.5, 0.5,　0.5, -0.5
+        0, 0.5,   -0.5, -0.5,   0.5, -0.5
     ]);
-    var n = 4; // The number of vertices
+    var n = 3; // The number of vertices
 
     // Create a buffer object
     /**
@@ -179,6 +182,18 @@ const __main = function () {
             return;
         }
 
+        // Pass the translation distance to the vertex shader
+        var u_Translation = gl.getUniformLocation(gl.program, 'u_Translation');
+        if (!u_Translation) {
+            console.log('Failed to get the storage location of u_Translation');
+            return;
+        }
+        /**
+         * 对于每个齐次坐标，因为要保证转换后，齐次坐标保持1.0，所以齐次坐标需要为0.0
+         * 由于写入一次后，u_Translation变量就一直为 (Tx, Ty, Tz, 0.0)，没有发生变化，所以三个点都会平移一样的向量
+         */
+        gl.uniform4f(u_Translation, Tx, Ty, Tz, 0.0);
+
         clear(gl)
 
         // Draw a point
@@ -212,7 +227,7 @@ const __main = function () {
          * 绘制一个正方形，如果使用gl.TRIANGLES，需要6个顶点
          * 使用gl.TRIANGLE_STRIP的话，表示三角带，只需要4个顶点
          */
-        gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+        gl.drawArrays(gl.TRIANGLES, 0, n);
     }
 
 
