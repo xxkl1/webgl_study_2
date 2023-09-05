@@ -53,12 +53,9 @@ var VSHADER_SOURCE =
   // y' = x sinβ + y cosβ
   // z' = z
   'attribute vec4 a_Position;\n' +
-  'uniform float u_CosB, u_SinB;\n' +
+  'uniform mat4 u_xformMatrix;\n' +
   'void main() {\n' +
-  '  gl_Position.x = a_Position.x * u_CosB - a_Position.y * u_SinB;\n' +
-  '  gl_Position.y = a_Position.x * u_SinB + a_Position.y * u_CosB;\n' +
-  '  gl_Position.z = a_Position.z;\n' +
-  '  gl_Position.w = 1.0;\n' +
+  '  gl_Position = u_xformMatrix * a_Position;\n' +
   '}\n';
 
 // Fragment shader program
@@ -78,7 +75,7 @@ var FSHADER_SOURCE =
   '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
 
-var ANGLE = 90.0; 
+var ANGLE = 90.0;
 
 const getGl = function () {
     const canvas = document.querySelector('#webgl') as HTMLCanvasElement
@@ -192,14 +189,27 @@ const __main = function () {
         var cosB = Math.cos(radian);
         var sinB = Math.sin(radian);
 
-        var u_CosB = gl.getUniformLocation(gl.program, 'u_CosB');
-        var u_SinB = gl.getUniformLocation(gl.program, 'u_SinB');
-        if (!u_CosB || !u_SinB) {
-          console.log('Failed to get the storage location of u_CosB or u_SinB');
+        /**
+         * 注意webgl，opengl，一维数组矩阵，是按列主序列
+         * 代表的矩阵是
+         * | cosB -sinB 0.0 0.0 |
+         * | sinB cosB 0.0 0.0  |
+         * | 0.0  0.0  1.0 0.0  |
+         * | 0.0  0.0  0.0 1.0  |
+         */
+        var xformMatrix = new Float32Array([
+            cosB, sinB, 0.0, 0.0,
+            -sinB, cosB, 0.0, 0.0,
+            0.0,  0.0, 1.0, 0.0,
+            0.0,  0.0, 0.0, 1.0
+        ]);
+
+        var u_xformMatrix = gl.getUniformLocation(gl.program, 'u_xformMatrix');
+        if (!u_xformMatrix) {
+          console.log('Failed to get the storage location of u_xformMatrix');
           return;
         }
-        gl.uniform1f(u_CosB, cosB);
-        gl.uniform1f(u_SinB, sinB);
+        gl.uniformMatrix4fv(u_xformMatrix, false, xformMatrix);
 
         clear(gl)
 
