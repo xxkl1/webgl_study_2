@@ -1,3 +1,4 @@
+import { Matrix4 } from './utils/cuon_matrix';
 import { initShaders } from './utils/cuon_utils';
 import { clear } from './utils/gl'
 
@@ -185,10 +186,6 @@ const __main = function () {
             return;
         }
 
-        var radian = Math.PI * ANGLE / 180.0; // Convert to radians
-        var cosB = Math.cos(radian);
-        var sinB = Math.sin(radian);
-
         /**
          * 注意webgl，opengl，一维数组矩阵，是按列主序列
          * 代表的矩阵是
@@ -197,19 +194,15 @@ const __main = function () {
          * | 0.0  0.0  1.0 0.0  |
          * | 0.0  0.0  0.0 1.0  |
          */
-        var xformMatrix = new Float32Array([
-            cosB, sinB, 0.0, 0.0,
-            -sinB, cosB, 0.0, 0.0,
-            0.0,  0.0, 1.0, 0.0,
-            0.0,  0.0, 0.0, 1.0
-        ]);
+        var xformMatrix = new Matrix4()
+        xformMatrix.setRotate(ANGLE, 0, 0, 1);
 
         var u_xformMatrix = gl.getUniformLocation(gl.program, 'u_xformMatrix');
         if (!u_xformMatrix) {
           console.log('Failed to get the storage location of u_xformMatrix');
           return;
         }
-        gl.uniformMatrix4fv(u_xformMatrix, false, xformMatrix);
+        gl.uniformMatrix4fv(u_xformMatrix, false, xformMatrix.elements);
 
         clear(gl)
 
