@@ -49,10 +49,9 @@ import { clear } from './utils/gl'
  * 注意：attribute变量必须为全局变量
  */
 var VSHADER_SOURCE =
-  'attribute vec4 a_Position;\n' + // attribute variable
+  'attribute vec4 a_Position;\n' +
   'void main() {\n' +
   '  gl_Position = a_Position;\n' +
-  '  gl_PointSize = 10.0;\n' +
   '}\n';
 
 // Fragment shader program
@@ -205,7 +204,11 @@ const __main = function () {
          */
         // gl.drawArrays(gl.POINTS, 0, 1)
           // Draw three points
-        gl.drawArrays(gl.POINTS, 0, n);
+        /**
+         * 绘制三角形，绘制三角形会根据第三个参数给的数量
+         * 按3个进行分配，如果n不是3的倍数，那么剩下一个或者两个点将被忽略
+         */
+        gl.drawArrays(gl.TRIANGLES, 0, n);
     }
 
 
