@@ -49,10 +49,16 @@ import { clear } from './utils/gl'
  * 注意：attribute变量必须为全局变量
  */
 var VSHADER_SOURCE =
+  // x' = x cosβ - y sinβ
+  // y' = x sinβ + y cosβ
+  // z' = z
   'attribute vec4 a_Position;\n' +
-  'uniform vec4 u_Translation;\n' +
+  'uniform float u_CosB, u_SinB;\n' +
   'void main() {\n' +
-  '  gl_Position = a_Position + u_Translation;\n' +
+  '  gl_Position.x = a_Position.x * u_CosB - a_Position.y * u_SinB;\n' +
+  '  gl_Position.y = a_Position.x * u_SinB + a_Position.y * u_CosB;\n' +
+  '  gl_Position.z = a_Position.z;\n' +
+  '  gl_Position.w = 1.0;\n' +
   '}\n';
 
 // Fragment shader program
@@ -72,7 +78,7 @@ var FSHADER_SOURCE =
   '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
 
-var Tx = 0.5, Ty = 0.5, Tz = 0.0;
+var ANGLE = 90.0; 
 
 const getGl = function () {
     const canvas = document.querySelector('#webgl') as HTMLCanvasElement
@@ -182,17 +188,18 @@ const __main = function () {
             return;
         }
 
-        // Pass the translation distance to the vertex shader
-        var u_Translation = gl.getUniformLocation(gl.program, 'u_Translation');
-        if (!u_Translation) {
-            console.log('Failed to get the storage location of u_Translation');
-            return;
+        var radian = Math.PI * ANGLE / 180.0; // Convert to radians
+        var cosB = Math.cos(radian);
+        var sinB = Math.sin(radian);
+
+        var u_CosB = gl.getUniformLocation(gl.program, 'u_CosB');
+        var u_SinB = gl.getUniformLocation(gl.program, 'u_SinB');
+        if (!u_CosB || !u_SinB) {
+          console.log('Failed to get the storage location of u_CosB or u_SinB');
+          return;
         }
-        /**
-         * 对于每个齐次坐标，因为要保证转换后，齐次坐标保持1.0，所以齐次坐标需要为0.0
-         * 由于写入一次后，u_Translation变量就一直为 (Tx, Ty, Tz, 0.0)，没有发生变化，所以三个点都会平移一样的向量
-         */
-        gl.uniform4f(u_Translation, Tx, Ty, Tz, 0.0);
+        gl.uniform1f(u_CosB, cosB);
+        gl.uniform1f(u_SinB, sinB);
 
         clear(gl)
 
