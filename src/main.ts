@@ -54,9 +54,9 @@ var VSHADER_SOURCE =
   // y' = x sinβ + y cosβ
   // z' = z
   'attribute vec4 a_Position;\n' +
-  'uniform mat4 u_xformMatrix;\n' +
+  'uniform mat4 u_ModelMatrix;\n' +
   'void main() {\n' +
-  '  gl_Position = u_xformMatrix * a_Position;\n' +
+  '  gl_Position = u_ModelMatrix * a_Position;\n' +
   '}\n';
 
 // Fragment shader program
@@ -194,15 +194,22 @@ const __main = function () {
          * | 0.0  0.0  1.0 0.0  |
          * | 0.0  0.0  0.0 1.0  |
          */
-        var xformMatrix = new Matrix4()
-        xformMatrix.setRotate(ANGLE, 0, 0, 1);
+        // Create Matrix4 object for model transformation
+        var modelMatrix = new Matrix4();
 
-        var u_xformMatrix = gl.getUniformLocation(gl.program, 'u_xformMatrix');
-        if (!u_xformMatrix) {
-          console.log('Failed to get the storage location of u_xformMatrix');
-          return;
+        // Calculate a model matrix
+        var ANGLE = 60.0; // The rotation angle
+        var Tx = 0.5;     // Translation distance
+        modelMatrix.setRotate(ANGLE, 0, 0, 1);  // Set rotation matrix
+        modelMatrix.translate(Tx, 0, 0);        // Multiply modelMatrix by the calculated translation matrix
+
+        // Pass the model matrix to the vertex shader
+        var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+        if (!u_ModelMatrix) {
+            console.log('Failed to get the storage location of u_xformMatrix');
+            return;
         }
-        gl.uniformMatrix4fv(u_xformMatrix, false, xformMatrix.elements);
+        gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
         clear(gl)
 
